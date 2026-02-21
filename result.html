@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天课计算结果 — 哈乃斐学派</title>
+    <meta name="description" content="您的天课（Zakat）计算结果详情。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .fade-in {
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .fade-in:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .fade-in:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .fade-in:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .no-data-msg {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-data-msg h2 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .no-data-msg p {
+            margin-bottom: 24px;
+        }
+
+        .timestamp {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+        </div>
+        <h1>天课计算结果</h1>
+        <p>基于哈乃斐学派教法 · 天课比例 2.5%</p>
+    </div>
+
+    <div class="container" id="resultContainer">
+        <!-- Content will be dynamically generated -->
+    </div>
+
+    <script>
+        function fmt(n) {
+            return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function render() {
+            const container = document.getElementById('resultContainer');
+            const raw = localStorage.getItem('zakatResult');
+
+            if (!raw) {
+                container.innerHTML = `
+                    <div class="card no-data-msg">
+                        <h2>暂无计算数据</h2>
+                        <p>请先在计算页面输入您的资产信息并计算天课。</p>
+                        <a href="Zakat.html" class="btn-secondary">前往计算</a>
+                    </div>`;
+                return;
+            }
+
+            const d = JSON.parse(raw);
+            const pct = d.nisabThreshold > 0 ? Math.min((d.netWealth / d.nisabThreshold) * 100, 100) : 0;
+            const calcTime = new Date(d.calculatedAt).toLocaleString('zh-CN');
+
+            container.innerHTML = `
+                <div class="timestamp">计算时间：${calcTime}</div>
+
+                <!-- 主结果卡片 -->
+                <div class="card fade-in" style="overflow:hidden; padding:0;">
+                    <div class="result-hero">
+                        <div class="status-icon ${d.isAboveNisab ? 'reached' : 'not-reached'}">
+                            ${d.isAboveNisab
+                    ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
+                    : '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-6h-2v6zm0-8h2V7h-2v2z"/></svg>'
+                }
+                        </div>
+                        <div class="zakat-amount ${d.isAboveNisab ? '' : 'zero'}">${fmt(d.zakatDue)}<span class="currency">元</span></div>
+                        <div class="status-text">${d.isAboveNisab ? '您的净资产已达到起征点，需缴纳天课' : '您的净资产未达到起征点，无需缴纳天课'}</div>
+                    </div>
+
+                    <!-- 起征点进度 -->
+                    <div class="nisab-section">
+                        <div class="nisab-label">
+                            <span>起征点进度</span>
+                            <strong>${Math.round(pct)}%</strong>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="nisab-label" style="margin-top:6px;">
+                            <span>Nisab: ${fmt(d.nisabThreshold)} 元</span>
+                            <span>净资产: ${fmt(d.netWealth)} 元</span>
+                        </div>
+                    </div>
+
+                    <!-- 操作 -->
+                    <div class="result-actions">
+                        <a href="Zakat.html" class="btn-secondary">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                            返回重新计算
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 资产明细卡片 -->
+                <div class="card fade-in" style="overflow:hidden; padding:0;">
+                    <div class="detail-section">
+                        <div class="detail-section-title">资产明细</div>
+
+                        <div class="detail-row">
+                            <span class="label">现金及银行存款</span>
+                            <span class="value">${fmt(d.assets.cash)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">黄金 (${d.assets.goldWeight}克 × ${d.goldPrice}元)</span>
+                            <span class="value">${fmt(d.assets.goldValue)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">白银 (${d.assets.silverWeight}克 × ${d.silverPrice}元)</span>
+                            <span class="value">${fmt(d.assets.silverValue)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">商业库存及贸易货物</span>
+                            <span class="value">${fmt(d.assets.tradeGoods)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">股票及基金</span>
+                            <span class="value">${fmt(d.assets.stocks)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">投资性房产</span>
+                            <span class="value">${fmt(d.assets.realEstate)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">应收账款</span>
+                            <span class="value">${fmt(d.assets.receivables)} 元</span>
+                        </div>
+                        <div class="detail-row subtotal">
+                            <span class="label">资产合计</span>
+                            <span class="value">${fmt(d.totalAssets)} 元</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="detail-section-title">债务扣除</div>
+
+                        <div class="detail-row danger">
+                            <span class="label">个人欠款/借款</span>
+                            <span class="value">−${fmt(d.debts.personalDebt)} 元</span>
+                        </div>
+                        <div class="detail-row danger">
+                            <span class="label">房贷（当年应还）</span>
+                            <span class="value">−${fmt(d.debts.mortgage)} 元</span>
+                        </div>
+                        <div class="detail-row danger">
+                            <span class="label">车贷/消费贷（当年应还）</span>
+                            <span class="value">−${fmt(d.debts.carLoan)} 元</span>
+                        </div>
+                        <div class="detail-row danger">
+                            <span class="label">信用卡待还余额</span>
+                            <span class="value">−${fmt(d.debts.creditCard)} 元</span>
+                        </div>
+                        <div class="detail-row danger">
+                            <span class="label">其他短期欠款</span>
+                            <span class="value">−${fmt(d.debts.otherDebt)} 元</span>
+                        </div>
+                        <div class="detail-row subtotal">
+                            <span class="label">债务合计</span>
+                            <span class="value" style="color: var(--danger);">−${fmt(d.totalDebts)} 元</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="detail-row total">
+                            <span class="label">净资产</span>
+                            <span class="value">${fmt(d.netWealth)} 元</span>
+                        </div>
+                        ${d.isAboveNisab ? `
+                        <div class="detail-row" style="margin-top: 8px;">
+                            <span class="label">× 天课比例</span>
+                            <span class="value" style="color: var(--primary);">2.5%</span>
+                        </div>
+                        <div class="detail-row total">
+                            <span class="label">应缴天课</span>
+                            <span class="value">${fmt(d.zakatDue)} 元</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- 金银价格参考 -->
+                <div class="card fade-in" style="overflow:hidden; padding:0;">
+                    <div class="detail-section">
+                        <div class="detail-section-title">金银价格参考</div>
+                        <div class="detail-row">
+                            <span class="label">黄金价格</span>
+                            <span class="value">${d.goldPrice.toFixed(2)} 元/克</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">白银价格</span>
+                            <span class="value">${d.silverPrice.toFixed(2)} 元/克</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">起征点 (612.36克白银)</span>
+                            <span class="value">${fmt(d.nisabThreshold)} 元</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    基于哈乃斐学派教法 · 天课比例 2.5% · 白银起征点 612.36 克
+                </div>
+            `;
+
+            // Animate progress bar
+            setTimeout(() => {
+                document.getElementById('progressFill').style.width = pct + '%';
+            }, 300);
+        }
+
+        render();
+    </script>
+
+</body>
+
+</html>

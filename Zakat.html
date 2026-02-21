@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哈乃斐学派天课计算器</title>
+    <meta name="description" content="基于哈乃斐学派的天课（Zakat）在线计算器，支持实时金银价格获取，帮助穆斯林准确计算应缴天课金额。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+        </div>
+        <h1>哈乃斐学派天课计算器</h1>
+        <p>满一个伊斯兰阴历年（Hawl）且达到起征点（Nisab）后方可计算</p>
+    </div>
+
+    <div class="container">
+
+        <!-- 全局单位选择器 -->
+        <div class="unit-switcher">
+            <span class="unit-switcher-label">货币单位</span>
+            <div class="unit-toggle" id="unitToggle">
+                <button class="unit-btn active" data-unit="yuan" onclick="switchUnit('yuan')">元</button>
+                <button class="unit-btn" data-unit="wan" onclick="switchUnit('wan')">万元</button>
+            </div>
+        </div>
+
+        <!-- 金银价格卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <div class="card-title-icon price">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-1h2v1zm0-3h-2V7h2v9z" />
+                    </svg>
+                </div>
+                实时金银价格
+                <button class="fetch-btn" id="fetchBtn" onclick="fetchPrices()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        <path
+                            d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                    </svg>
+                    获取实时价格
+                </button>
+            </div>
+            <div id="priceStatus" class="price-status" style="display:none;"></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>每克白银价格</label>
+                    <div class="input-wrapper">
+                        <input type="number" min="0" inputmode="decimal" id="silverPrice" placeholder="例如 6.50"
+                            step="0.01">
+                        <span class="unit">元/克</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>每克黄金价格</label>
+                    <div class="input-wrapper">
+                        <input type="number" min="0" inputmode="decimal" id="goldPrice" placeholder="例如 500.00"
+                            step="0.01">
+                        <span class="unit">元/克</span>
+                    </div>
+                </div>
+            </div>
+            <div class="note">* 哈乃斐学派以白银价值（612.36 克）作为起征点标准。点击上方按钮可自动获取实时国际价格。</div>
+        </div>
+
+        <!-- 资产卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <div class="card-title-icon asset">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                    </svg>
+                </div>
+                资产明细
+            </div>
+
+            <div class="form-section-label">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path
+                        d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+                </svg>
+                现金类资产
+            </div>
+            <div class="form-group">
+                <label>1. 现金及银行存款</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="cash" class="currency-input" placeholder="0.00"
+                        value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+
+            <div class="form-section-label">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path
+                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" />
+                </svg>
+                贵金属
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>2. 黄金重量</label>
+                    <div class="input-wrapper">
+                        <input type="number" min="0" inputmode="decimal" id="goldWeight" placeholder="0" value="0">
+                        <span class="unit">克</span>
+                    </div>
+                    <div class="note">含金条、金币及所有黄金首饰</div>
+                </div>
+                <div class="form-group">
+                    <label>3. 白银重量</label>
+                    <div class="input-wrapper">
+                        <input type="number" min="0" inputmode="decimal" id="silverWeight" placeholder="0" value="0">
+                        <span class="unit">克</span>
+                    </div>
+                    <div class="note">含银条、银币及所有白银首饰</div>
+                </div>
+            </div>
+
+            <div class="form-section-label">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                </svg>
+                投资与商业资产
+            </div>
+            <div class="form-group">
+                <label>4. 商业库存及贸易货物市值</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="tradeGoods" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>5. 股票及基金市值</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="stocks" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+                <div class="note">含所有股票、基金、债券等金融投资</div>
+            </div>
+            <div class="form-group">
+                <label>6. 投资性房产市值</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="realEstate" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+                <div class="note">仅含用于投资或出租的房产，不含自住房</div>
+            </div>
+            <div class="form-group">
+                <label>7. 应收账款</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="receivables" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+                <div class="note">确信能收回的欠款</div>
+            </div>
+        </div>
+
+        <!-- 债务卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <div class="card-title-icon debt">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-2h-2v2zm0-4h2V7h-2v6z" />
+                    </svg>
+                </div>
+                债务扣除
+            </div>
+            <div class="note" style="margin-bottom: 14px; margin-top: -8px;">仅可扣除短期债务或当年须偿还的长期债务部分</div>
+            <div class="form-group">
+                <label>1. 个人欠款/借款</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="personalDebt" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>2. 房贷（当年应还部分）</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="mortgage" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>3. 车贷/消费贷（当年应还部分）</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="carLoan" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>4. 信用卡待还余额</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="creditCard" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>5. 其他短期欠款</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="otherDebt" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="btn-group">
+            <button class="btn-primary" onclick="calculateAndNavigate()">
+                计算天课 (2.5%)
+            </button>
+            <button class="btn-reset" onclick="resetForm()">重置</button>
+        </div>
+
+        <div class="footer">
+            基于哈乃斐学派教法 · 天课比例 2.5% · 白银起征点 612.36 克
+        </div>
+    </div>
+
+    <script>
+        // ===== State =====
+        let currentUnit = 'yuan'; // 'yuan' or 'wan'
+
+        // ===== Auto-Save Draft =====
+        document.addEventListener('input', (e) => {
+            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'number') {
+                saveDraft();
+            }
+        });
+
+        function saveDraft() {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            const draft = {};
+            inputs.forEach(input => draft[input.id] = input.value);
+            draft.currentUnit = currentUnit;
+            localStorage.setItem('zakatDraft', JSON.stringify(draft));
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const draftRaw = localStorage.getItem('zakatDraft');
+            if (draftRaw) {
+                try {
+                    const draft = JSON.parse(draftRaw);
+                    if (draft.currentUnit === 'wan') switchUnit('wan');
+                    const inputs = document.querySelectorAll('input[type="number"]');
+                    inputs.forEach(input => {
+                        if (draft[input.id] !== undefined) {
+                            input.value = draft[input.id];
+                        }
+                    });
+                } catch (e) { /* ignore */ }
+            }
+        });
+
+        // ===== Unit Switcher =====
+        function switchUnit(unit) {
+            if (unit === currentUnit) return;
+
+            const currencyInputs = document.querySelectorAll('.currency-input');
+            const factor = unit === 'wan' ? 0.0001 : 10000;
+
+            currencyInputs.forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                if (val !== 0) {
+                    input.value = parseFloat((val * factor).toPrecision(10));
+                }
+            });
+
+            currentUnit = unit;
+            document.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.unit === unit);
+            });
+            document.querySelectorAll('.unit-display').forEach(el => {
+                el.textContent = unit === 'wan' ? '万元' : '元';
+            });
+            saveDraft();
+        }
+
+        // ===== Real-time Price Fetching =====
+        async function fetchPrices() {
+            const btn = document.getElementById('fetchBtn');
+            const statusEl = document.getElementById('priceStatus');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="spin" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> 获取中...';
+
+            statusEl.style.display = 'block';
+            statusEl.className = 'price-status loading';
+            statusEl.textContent = '正在获取实时国际金银价格...';
+
+            try {
+                // Fetch gold and silver prices (USD per troy ounce)
+                const [goldRes, silverRes] = await Promise.all([
+                    fetch('https://api.gold-api.com/price/XAU'),
+                    fetch('https://api.gold-api.com/price/XAG')
+                ]);
+
+                if (!goldRes.ok || !silverRes.ok) throw new Error('API 请求失败');
+
+                const goldData = await goldRes.json();
+                const silverData = await silverRes.json();
+
+                // Fetch USD to CNY exchange rate
+                const fxRes = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (!fxRes.ok) throw new Error('汇率获取失败');
+                const fxData = await fxRes.json();
+                const usdToCny = fxData.rates.CNY;
+
+                // Convert: USD/troy oz → CNY/gram (1 troy oz = 31.1035 grams)
+                const troyOzToGram = 31.1035;
+                const goldPriceCnyGram = (goldData.price * usdToCny) / troyOzToGram;
+                const silverPriceCnyGram = (silverData.price * usdToCny) / troyOzToGram;
+
+                document.getElementById('goldPrice').value = goldPriceCnyGram.toFixed(2);
+                document.getElementById('silverPrice').value = silverPriceCnyGram.toFixed(2);
+
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                statusEl.className = 'price-status success';
+                statusEl.innerHTML = '✓ 价格已更新（' + timeStr + '）· 汇率 1 USD = ' + usdToCny.toFixed(4) + ' CNY';
+            } catch (err) {
+                statusEl.className = 'price-status error';
+                statusEl.textContent = '⚠ 获取失败，请手动输入价格 (' + err.message + ')';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> 获取实时价格';
+            }
+        }
+
+        // ===== Helpers =====
+        function getVal(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        // Convert currency input to yuan, regardless of current unit
+        function toYuan(val) {
+            return currentUnit === 'wan' ? val * 10000 : val;
+        }
+
+        // ===== Calculate & Navigate to Result Page =====
+        function calculateAndNavigate() {
+            const silverPrice = getVal('silverPrice');
+            const goldPrice = getVal('goldPrice');
+
+            if (silverPrice <= 0 || goldPrice <= 0) {
+                if (silverPrice <= 0) document.getElementById('silverPrice').focus();
+                else document.getElementById('goldPrice').focus();
+                return;
+            }
+
+            // Raw input values
+            const cash = toYuan(getVal('cash'));
+            const goldWeight = getVal('goldWeight');
+            const silverWeight = getVal('silverWeight');
+            const tradeGoods = toYuan(getVal('tradeGoods'));
+            const stocks = toYuan(getVal('stocks'));
+            const realEstate = toYuan(getVal('realEstate'));
+            const receivables = toYuan(getVal('receivables'));
+
+            const personalDebt = toYuan(getVal('personalDebt'));
+            const mortgage = toYuan(getVal('mortgage'));
+            const carLoan = toYuan(getVal('carLoan'));
+            const creditCard = toYuan(getVal('creditCard'));
+            const otherDebt = toYuan(getVal('otherDebt'));
+
+            // Floating point safe addition helper
+            const safeAdd = (...nums) => nums.reduce((sum, num) => Math.round((sum + num) * 100) / 100, 0);
+
+            // Calculations (all in yuan), rounded to 2 decimals
+            const nisabSilverWeight = 612.36;
+            const nisabThreshold = Math.round((nisabSilverWeight * silverPrice) * 100) / 100;
+
+            const goldValue = Math.round((goldWeight * goldPrice) * 100) / 100;
+            const silverValue = Math.round((silverWeight * silverPrice) * 100) / 100;
+            const totalAssets = safeAdd(cash, goldValue, silverValue, tradeGoods, stocks, realEstate, receivables);
+            const totalDebts = safeAdd(personalDebt, mortgage, carLoan, creditCard, otherDebt);
+            const netWealth = Math.round((totalAssets - totalDebts) * 100) / 100;
+
+            const isAboveNisab = netWealth >= nisabThreshold;
+            const zakatDue = isAboveNisab ? Math.round((netWealth * 0.025) * 100) / 100 : 0;
+
+            // Store result data
+            const resultData = {
+                silverPrice,
+                goldPrice,
+                nisabThreshold,
+                assets: {
+                    cash,
+                    goldWeight,
+                    goldValue,
+                    silverWeight,
+                    silverValue,
+                    tradeGoods,
+                    stocks,
+                    realEstate,
+                    receivables
+                },
+                debts: {
+                    personalDebt,
+                    mortgage,
+                    carLoan,
+                    creditCard,
+                    otherDebt
+                },
+                totalAssets,
+                totalDebts,
+                netWealth,
+                isAboveNisab,
+                zakatDue,
+                calculatedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('zakatResult', JSON.stringify(resultData));
+            window.location.href = 'result.html';
+        }
+
+        // ===== Reset =====
+        function resetForm() {
+            if (currentUnit === 'wan') switchUnit('yuan');
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                if (input.id === 'silverPrice' || input.id === 'goldPrice') {
+                    input.value = '';
+                } else {
+                    input.value = '0';
+                }
+            });
+            document.getElementById('priceStatus').style.display = 'none';
+            localStorage.removeItem('zakatDraft');
+        }
+
+        // Enter key to calculate
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') calculateAndNavigate();
+        });
+
+        // Auto-fetch prices on load
+        fetchPrices();
+    </script>
+
+</body>
+
+</html>
