@@ -231,27 +231,27 @@
                     </div>
                 </div>
 
-                <!-- 金银价格参考 -->
+                <!-- 参考信息 -->
                 <div class="card fade-in" style="overflow:hidden; padding:0;">
                     <div class="detail-section">
-                        <div class="detail-section-title">金银价格参考</div>
+                        <div class="detail-section-title">参考信息</div>
                         <div class="detail-row">
-                            <span class="label">黄金价格</span>
-                            <span class="value">${d.goldPrice.toFixed(2)} 元/克</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">白银价格</span>
-                            <span class="value">${d.silverPrice.toFixed(2)} 元/克</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">起征点 (612.36克白银)</span>
+                            <span class="label">起征点（用户设定）</span>
                             <span class="value">${fmt(d.nisabThreshold)} 元</span>
                         </div>
+                        ${d.goldPrice > 0 ? `<div class="detail-row">
+                            <span class="label">黄金价格</span>
+                            <span class="value">${d.goldPrice.toFixed(2)} 元/克</span>
+                        </div>` : ''}
+                        ${d.silverPrice > 0 ? `<div class="detail-row">
+                            <span class="label">白银价格</span>
+                            <span class="value">${d.silverPrice.toFixed(2)} 元/克</span>
+                        </div>` : ''}
                     </div>
                 </div>
 
                 <div class="footer">
-                    基于哈乃斐学派教法 · 天课比例 2.5% · 白银起征点 612.36 克
+                    基于哈乃斐学派教法 · 天课比例 2.5%
                 </div>
             `;
 

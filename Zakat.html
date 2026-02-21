@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天课计算器</title>
+    <title>哈乃斐学派天课计算器</title>
     <meta name="description" content="基于哈乃斐学派的天课（Zakat）在线计算器，支持实时金银价格获取，帮助穆斯林准确计算应缴天课金额。">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,14 +28,7 @@
 
     <div class="container">
 
-        <!-- 全局单位选择器 -->
-        <div class="unit-switcher">
-            <span class="unit-switcher-label">货币单位</span>
-            <div class="unit-toggle" id="unitToggle">
-                <button class="unit-btn active" data-unit="yuan" onclick="switchUnit('yuan')">元</button>
-                <button class="unit-btn" data-unit="wan" onclick="switchUnit('wan')">万元</button>
-            </div>
-        </div>
+
 
         <!-- 金银价格卡片 -->
         <div class="card">
@@ -74,7 +67,35 @@
                     </div>
                 </div>
             </div>
-            <div class="note">* 哈乃斐学派以白银价值（612.36 克）作为起征点标准。点击上方按钮可自动获取实时国际价格。</div>
+            <div class="note">* 点击上方按钮可自动获取实时国际金银价格，用于计算您持有的贵金属市值。</div>
+        </div>
+
+        <!-- 起征点卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <div class="card-title-icon nisab">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                    </svg>
+                </div>
+                天课起征点（满贯）
+                <div class="card-unit-toggle" id="nisabUnitToggle">
+                    <button class="unit-btn active" data-unit="yuan"
+                        onclick="switchSectionUnit('nisab','yuan')">元</button>
+                    <button class="unit-btn" data-unit="wan" onclick="switchSectionUnit('nisab','wan')">万元</button>
+                </div>
+            </div>
+            <div class="note" style="margin-bottom: 14px; margin-top: -8px;">请根据当地学者的指导或当地白银/黄金价值设置起征点</div>
+            <div class="form-group">
+                <label>起征点金额</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="nisabThreshold" class="currency-input"
+                        placeholder="例如 25000" step="0.01">
+                    <span class="unit unit-display">元</span>
+                </div>
+                <div class="note">* 哈乃斐学派通常以 612.36 克白银的市场价值为参考标准</div>
+            </div>
         </div>
 
         <!-- 资产卡片 -->
@@ -87,6 +108,11 @@
                     </svg>
                 </div>
                 资产明细
+                <div class="card-unit-toggle" id="assetUnitToggle">
+                    <button class="unit-btn active" data-unit="yuan"
+                        onclick="switchSectionUnit('asset','yuan')">元</button>
+                    <button class="unit-btn" data-unit="wan" onclick="switchSectionUnit('asset','wan')">万元</button>
+                </div>
             </div>
 
             <div class="form-section-label">
@@ -184,6 +210,11 @@
                     </svg>
                 </div>
                 债务扣除
+                <div class="card-unit-toggle" id="debtUnitToggle">
+                    <button class="unit-btn active" data-unit="yuan"
+                        onclick="switchSectionUnit('debt','yuan')">元</button>
+                    <button class="unit-btn" data-unit="wan" onclick="switchSectionUnit('debt','wan')">万元</button>
+                </div>
             </div>
             <div class="note" style="margin-bottom: 14px; margin-top: -8px;">仅可扣除短期债务或当年须偿还的长期债务部分</div>
             <div class="form-group">
@@ -237,13 +268,20 @@
         </div>
 
         <div class="footer">
-            基于哈乃斐学派教法 · 天课比例 2.5% · 白银起征点 612.36 克
+            基于哈乃斐学派教法 · 天课比例 2.5%
         </div>
     </div>
 
     <script>
         // ===== State =====
-        let currentUnit = 'yuan'; // 'yuan' or 'wan'
+        let assetUnit = 'yuan'; // 'yuan' or 'wan'
+        let debtUnit = 'yuan';  // 'yuan' or 'wan'
+        let nisabUnit = 'yuan'; // 'yuan' or 'wan'
+
+        // IDs belonging to each section
+        const assetCurrencyIds = ['cash', 'tradeGoods', 'stocks', 'realEstate', 'receivables'];
+        const debtCurrencyIds = ['personalDebt', 'mortgage', 'carLoan', 'creditCard', 'otherDebt'];
+        const nisabCurrencyIds = ['nisabThreshold'];
 
         // ===== Auto-Save Draft =====
         document.addEventListener('input', (e) => {
@@ -256,7 +294,9 @@
             const inputs = document.querySelectorAll('input[type="number"]');
             const draft = {};
             inputs.forEach(input => draft[input.id] = input.value);
-            draft.currentUnit = currentUnit;
+            draft.assetUnit = assetUnit;
+            draft.debtUnit = debtUnit;
+            draft.nisabUnit = nisabUnit;
             localStorage.setItem('zakatDraft', JSON.stringify(draft));
         }
 
@@ -265,38 +305,64 @@
             if (draftRaw) {
                 try {
                     const draft = JSON.parse(draftRaw);
-                    if (draft.currentUnit === 'wan') switchUnit('wan');
+                    // Restore input values first
                     const inputs = document.querySelectorAll('input[type="number"]');
                     inputs.forEach(input => {
                         if (draft[input.id] !== undefined) {
                             input.value = draft[input.id];
                         }
                     });
+                    // Then restore units (which may convert values)
+                    if (draft.assetUnit === 'wan') switchSectionUnit('asset', 'wan');
+                    if (draft.debtUnit === 'wan') switchSectionUnit('debt', 'wan');
+                    if (draft.nisabUnit === 'wan') switchSectionUnit('nisab', 'wan');
                 } catch (e) { /* ignore */ }
             }
         });
 
-        // ===== Unit Switcher =====
-        function switchUnit(unit) {
+        // ===== Section-level Unit Switcher =====
+        function switchSectionUnit(section, unit) {
+            let currentUnit, ids, toggleId;
+            if (section === 'asset') {
+                currentUnit = assetUnit; ids = assetCurrencyIds; toggleId = 'assetUnitToggle';
+            } else if (section === 'debt') {
+                currentUnit = debtUnit; ids = debtCurrencyIds; toggleId = 'debtUnitToggle';
+            } else {
+                currentUnit = nisabUnit; ids = nisabCurrencyIds; toggleId = 'nisabUnitToggle';
+            }
             if (unit === currentUnit) return;
-
-            const currencyInputs = document.querySelectorAll('.currency-input');
             const factor = unit === 'wan' ? 0.0001 : 10000;
 
-            currencyInputs.forEach(input => {
+            ids.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
                 const val = parseFloat(input.value) || 0;
                 if (val !== 0) {
                     input.value = parseFloat((val * factor).toPrecision(10));
                 }
             });
 
-            currentUnit = unit;
-            document.querySelectorAll('.unit-btn').forEach(btn => {
+            // Update state
+            if (section === 'asset') assetUnit = unit;
+            else if (section === 'debt') debtUnit = unit;
+            else nisabUnit = unit;
+
+            // Update toggle buttons
+            const toggleEl = document.getElementById(toggleId);
+            toggleEl.querySelectorAll('.unit-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.unit === unit);
             });
-            document.querySelectorAll('.unit-display').forEach(el => {
-                el.textContent = unit === 'wan' ? '万元' : '元';
+
+            // Update unit labels next to inputs
+            const unitLabel = unit === 'wan' ? '万元' : '元';
+            ids.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                const wrapper = input.closest('.input-wrapper');
+                const unitSpan = wrapper?.querySelector('.unit-display');
+                if (unitSpan) unitSpan.textContent = unitLabel;
             });
+
             saveDraft();
         }
 
@@ -355,46 +421,68 @@
             return parseFloat(document.getElementById(id).value) || 0;
         }
 
-        // Convert currency input to yuan, regardless of current unit
-        function toYuan(val) {
-            return currentUnit === 'wan' ? val * 10000 : val;
+        // Convert asset currency input to yuan
+        function assetToYuan(val) {
+            return assetUnit === 'wan' ? val * 10000 : val;
+        }
+
+        // Convert debt currency input to yuan
+        function debtToYuan(val) {
+            return debtUnit === 'wan' ? val * 10000 : val;
+        }
+
+        // Convert nisab currency input to yuan
+        function nisabToYuan(val) {
+            return nisabUnit === 'wan' ? val * 10000 : val;
         }
 
         // ===== Calculate & Navigate to Result Page =====
         function calculateAndNavigate() {
+            const nisabInputRaw = getVal('nisabThreshold');
+            if (nisabInputRaw <= 0) {
+                document.getElementById('nisabThreshold').focus();
+                return;
+            }
+
             const silverPrice = getVal('silverPrice');
             const goldPrice = getVal('goldPrice');
 
-            if (silverPrice <= 0 || goldPrice <= 0) {
-                if (silverPrice <= 0) document.getElementById('silverPrice').focus();
-                else document.getElementById('goldPrice').focus();
+            // Gold/silver prices needed only if user has entered weight
+            const goldWeight = getVal('goldWeight');
+            const silverWeight = getVal('silverWeight');
+
+            if (goldWeight > 0 && goldPrice <= 0) {
+                document.getElementById('goldPrice').focus();
+                return;
+            }
+            if (silverWeight > 0 && silverPrice <= 0) {
+                document.getElementById('silverPrice').focus();
                 return;
             }
 
             // Raw input values
-            const cash = toYuan(getVal('cash'));
-            const goldWeight = getVal('goldWeight');
-            const silverWeight = getVal('silverWeight');
-            const tradeGoods = toYuan(getVal('tradeGoods'));
-            const stocks = toYuan(getVal('stocks'));
-            const realEstate = toYuan(getVal('realEstate'));
-            const receivables = toYuan(getVal('receivables'));
+            const cash = assetToYuan(getVal('cash'));
+            const tradeGoods = assetToYuan(getVal('tradeGoods'));
+            const stocks = assetToYuan(getVal('stocks'));
+            const realEstate = assetToYuan(getVal('realEstate'));
+            const receivables = assetToYuan(getVal('receivables'));
 
-            const personalDebt = toYuan(getVal('personalDebt'));
-            const mortgage = toYuan(getVal('mortgage'));
-            const carLoan = toYuan(getVal('carLoan'));
-            const creditCard = toYuan(getVal('creditCard'));
-            const otherDebt = toYuan(getVal('otherDebt'));
+            const personalDebt = debtToYuan(getVal('personalDebt'));
+            const mortgage = debtToYuan(getVal('mortgage'));
+            const carLoan = debtToYuan(getVal('carLoan'));
+            const creditCard = debtToYuan(getVal('creditCard'));
+            const otherDebt = debtToYuan(getVal('otherDebt'));
 
             // Floating point safe addition helper
             const safeAdd = (...nums) => nums.reduce((sum, num) => Math.round((sum + num) * 100) / 100, 0);
 
-            // Calculations (all in yuan), rounded to 2 decimals
-            const nisabSilverWeight = 612.36;
-            const nisabThreshold = Math.round((nisabSilverWeight * silverPrice) * 100) / 100;
+            // Nisab threshold: convert to 元 based on current nisab unit
+            const nisabThreshold = Math.round(nisabToYuan(nisabInputRaw) * 100) / 100;
 
+            // Precious metal values (in yuan)
             const goldValue = Math.round((goldWeight * goldPrice) * 100) / 100;
             const silverValue = Math.round((silverWeight * silverPrice) * 100) / 100;
+
             const totalAssets = safeAdd(cash, goldValue, silverValue, tradeGoods, stocks, realEstate, receivables);
             const totalDebts = safeAdd(personalDebt, mortgage, carLoan, creditCard, otherDebt);
             const netWealth = Math.round((totalAssets - totalDebts) * 100) / 100;
@@ -439,9 +527,11 @@
 
         // ===== Reset =====
         function resetForm() {
-            if (currentUnit === 'wan') switchUnit('yuan');
+            if (assetUnit === 'wan') switchSectionUnit('asset', 'yuan');
+            if (debtUnit === 'wan') switchSectionUnit('debt', 'yuan');
+            if (nisabUnit === 'wan') switchSectionUnit('nisab', 'yuan');
             document.querySelectorAll('input[type="number"]').forEach(input => {
-                if (input.id === 'silverPrice' || input.id === 'goldPrice') {
+                if (input.id === 'silverPrice' || input.id === 'goldPrice' || input.id === 'nisabThreshold') {
                     input.value = '';
                 } else {
                     input.value = '0';
@@ -449,11 +539,28 @@
             });
             document.getElementById('priceStatus').style.display = 'none';
             localStorage.removeItem('zakatDraft');
+            // Re-fetch real-time prices after reset
+            fetchPrices();
         }
 
         // Enter key to calculate
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') calculateAndNavigate();
+        });
+
+        // ===== Auto-clear 0 on focus =====
+        document.addEventListener('focusin', (e) => {
+            if (e.target.matches('input[type="number"]') && e.target.value === '0') {
+                e.target.value = '';
+            }
+        });
+        document.addEventListener('focusout', (e) => {
+            if (e.target.matches('input[type="number"]') && e.target.value === '') {
+                // Don't restore 0 for price/nisab fields that use placeholder
+                if (e.target.id !== 'silverPrice' && e.target.id !== 'goldPrice' && e.target.id !== 'nisabThreshold') {
+                    e.target.value = '0';
+                }
+            }
         });
 
         // Auto-fetch prices on load
