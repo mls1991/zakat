@@ -395,6 +395,46 @@ input[type="number"]::placeholder {
     line-height: 1.5;
 }
 
+/* ===== Validation + Hawl Confirm ===== */
+.form-alert {
+    margin: 4px 0 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(192, 57, 43, 0.25);
+    border-radius: var(--radius-sm);
+    background: #fef5f3;
+    color: var(--danger);
+    font-size: 0.84rem;
+    font-weight: 500;
+}
+
+.hawl-confirm {
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-top: 0.2rem;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+}
+
 /* ===== Buttons ===== */
 .btn-group {
     display: flex;
@@ -705,6 +745,10 @@ input[type="number"]::placeholder {
         margin-top: 6px;
         width: 100%;
         justify-content: center;
+    }
+
+    .hawl-confirm {
+        padding: 12px 14px;
     }
 }
 

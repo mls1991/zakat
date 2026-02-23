@@ -178,7 +178,7 @@
                         placeholder="0.00" value="0">
                     <span class="unit unit-display">元</span>
                 </div>
-                <div class="note">含所有股票、基金、债券等金融投资</div>
+                <div class="note">默认按当前市值计入；如存在复杂或特殊持仓，请咨询当地学者</div>
             </div>
             <div class="form-group">
                 <label>6. 投资性房产市值</label>
@@ -187,7 +187,7 @@
                         placeholder="0.00" value="0">
                     <span class="unit unit-display">元</span>
                 </div>
-                <div class="note">仅含用于投资或出租的房产，不含自住房</div>
+                <div class="note">仅填写用于买卖获利的房产；出租房产通常按可支配租金计入现金</div>
             </div>
             <div class="form-group">
                 <label>7. 应收账款</label>
@@ -200,7 +200,7 @@
             </div>
         </div>
 
-        <!-- 债务卡片 -->
+        <!-- 日常开支和债务扣除卡片 -->
         <div class="card">
             <div class="card-title">
                 <div class="card-title-icon debt">
@@ -209,7 +209,7 @@
                             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-2h-2v2zm0-4h2V7h-2v6z" />
                     </svg>
                 </div>
-                债务扣除
+                日常开支和债务扣除
                 <div class="card-unit-toggle" id="debtUnitToggle">
                     <button class="unit-btn active" data-unit="yuan"
                         onclick="switchSectionUnit('debt','yuan')">元</button>
@@ -218,7 +218,15 @@
             </div>
             <div class="note" style="margin-bottom: 14px; margin-top: -8px;">仅可扣除短期债务或当年须偿还的长期债务部分</div>
             <div class="form-group">
-                <label>1. 个人欠款/借款</label>
+                <label>1. 一年的基本日常开支金额</label>
+                <div class="input-wrapper">
+                    <input type="number" min="0" inputmode="decimal" id="annualBasicExpenses" class="currency-input"
+                        placeholder="0.00" value="0">
+                    <span class="unit unit-display">元</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>2. 个人欠款/借款</label>
                 <div class="input-wrapper">
                     <input type="number" min="0" inputmode="decimal" id="personalDebt" class="currency-input"
                         placeholder="0.00" value="0">
@@ -226,7 +234,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>2. 房贷（当年应还部分）</label>
+                <label>3. 房贷（当年应还部分）</label>
                 <div class="input-wrapper">
                     <input type="number" min="0" inputmode="decimal" id="mortgage" class="currency-input"
                         placeholder="0.00" value="0">
@@ -234,7 +242,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>3. 车贷/消费贷（当年应还部分）</label>
+                <label>4. 车贷/消费贷（当年应还部分）</label>
                 <div class="input-wrapper">
                     <input type="number" min="0" inputmode="decimal" id="carLoan" class="currency-input"
                         placeholder="0.00" value="0">
@@ -242,7 +250,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>4. 信用卡待还余额</label>
+                <label>5. 信用卡待还余额</label>
                 <div class="input-wrapper">
                     <input type="number" min="0" inputmode="decimal" id="creditCard" class="currency-input"
                         placeholder="0.00" value="0">
@@ -250,13 +258,23 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>5. 其他短期欠款</label>
+                <label>6. 其他短期欠款</label>
                 <div class="input-wrapper">
                     <input type="number" min="0" inputmode="decimal" id="otherDebt" class="currency-input"
                         placeholder="0.00" value="0">
                     <span class="unit unit-display">元</span>
                 </div>
             </div>
+        </div>
+
+        <div id="formAlert" class="form-alert" role="alert" aria-live="polite" style="display:none;"></div>
+
+        <div class="hawl-confirm">
+            <label class="checkbox-label" for="hawlConfirmed">
+                <input type="checkbox" id="hawlConfirmed">
+                <span>我确认以上应课资产已满一个阴历年（Hawl）</span>
+            </label>
+            <div class="note">* 若资产未满一年，或存在复杂资产形态，请先咨询当地学者再判断是否应缴</div>
         </div>
 
         <!-- 操作按钮 -->
@@ -277,23 +295,26 @@
         let assetUnit = 'yuan'; // 'yuan' or 'wan'
         let debtUnit = 'yuan';  // 'yuan' or 'wan'
         let nisabUnit = 'yuan'; // 'yuan' or 'wan'
+        const DRAFT_SCHEMA_VERSION = 3;
 
         // IDs belonging to each section
         const assetCurrencyIds = ['cash', 'tradeGoods', 'stocks', 'realEstate', 'receivables'];
-        const debtCurrencyIds = ['personalDebt', 'mortgage', 'carLoan', 'creditCard', 'otherDebt'];
+        const debtCurrencyIds = ['personalDebt', 'mortgage', 'carLoan', 'creditCard', 'otherDebt', 'annualBasicExpenses'];
         const nisabCurrencyIds = ['nisabThreshold'];
 
         // ===== Auto-Save Draft =====
         document.addEventListener('input', (e) => {
-            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'number') {
+            if (e.target.tagName.toLowerCase() === 'input' && (e.target.type === 'number' || e.target.type === 'checkbox')) {
+                clearFormAlert();
                 saveDraft();
             }
         });
 
         function saveDraft() {
             const inputs = document.querySelectorAll('input[type="number"]');
-            const draft = {};
+            const draft = { schemaVersion: DRAFT_SCHEMA_VERSION };
             inputs.forEach(input => draft[input.id] = input.value);
+            draft.hawlConfirmed = document.getElementById('hawlConfirmed')?.checked || false;
             draft.assetUnit = assetUnit;
             draft.debtUnit = debtUnit;
             draft.nisabUnit = nisabUnit;
@@ -312,6 +333,8 @@
                             input.value = draft[input.id];
                         }
                     });
+                    const hawlCheckbox = document.getElementById('hawlConfirmed');
+                    if (hawlCheckbox) hawlCheckbox.checked = !!draft.hawlConfirmed;
                     // Then restore units (which may convert values)
                     if (draft.assetUnit === 'wan') switchSectionUnit('asset', 'wan');
                     if (draft.debtUnit === 'wan') switchSectionUnit('debt', 'wan');
@@ -402,6 +425,7 @@
 
                 document.getElementById('goldPrice').value = goldPriceCnyGram.toFixed(2);
                 document.getElementById('silverPrice').value = silverPriceCnyGram.toFixed(2);
+                saveDraft();
 
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -417,8 +441,31 @@
         }
 
         // ===== Helpers =====
+        function sanitizeNumber(raw) {
+            const n = Number.parseFloat(raw);
+            if (!Number.isFinite(n)) return 0;
+            return Math.max(0, n);
+        }
+
+        function roundMoney(num) {
+            return Math.round(num * 100) / 100;
+        }
+
+        function showFormAlert(message) {
+            const alertEl = document.getElementById('formAlert');
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+        }
+
+        function clearFormAlert() {
+            const alertEl = document.getElementById('formAlert');
+            if (!alertEl) return;
+            alertEl.textContent = '';
+            alertEl.style.display = 'none';
+        }
+
         function getVal(id) {
-            return parseFloat(document.getElementById(id).value) || 0;
+            return sanitizeNumber(document.getElementById(id).value);
         }
 
         // Convert asset currency input to yuan
@@ -438,8 +485,18 @@
 
         // ===== Calculate & Navigate to Result Page =====
         function calculateAndNavigate() {
+            clearFormAlert();
+
+            const hawlConfirmed = document.getElementById('hawlConfirmed').checked;
+            if (!hawlConfirmed) {
+                showFormAlert('请先确认应课资产已满一个阴历年（Hawl）后再计算。');
+                document.getElementById('hawlConfirmed').focus();
+                return;
+            }
+
             const nisabInputRaw = getVal('nisabThreshold');
             if (nisabInputRaw <= 0) {
+                showFormAlert('请先填写有效的天课起征点金额（需大于 0）。');
                 document.getElementById('nisabThreshold').focus();
                 return;
             }
@@ -452,10 +509,12 @@
             const silverWeight = getVal('silverWeight');
 
             if (goldWeight > 0 && goldPrice <= 0) {
+                showFormAlert('已填写黄金重量，请先填写有效黄金价格。');
                 document.getElementById('goldPrice').focus();
                 return;
             }
             if (silverWeight > 0 && silverPrice <= 0) {
+                showFormAlert('已填写白银重量，请先填写有效白银价格。');
                 document.getElementById('silverPrice').focus();
                 return;
             }
@@ -472,26 +531,29 @@
             const carLoan = debtToYuan(getVal('carLoan'));
             const creditCard = debtToYuan(getVal('creditCard'));
             const otherDebt = debtToYuan(getVal('otherDebt'));
+            const annualBasicExpenses = debtToYuan(getVal('annualBasicExpenses'));
 
             // Floating point safe addition helper
-            const safeAdd = (...nums) => nums.reduce((sum, num) => Math.round((sum + num) * 100) / 100, 0);
+            const safeAdd = (...nums) => nums.reduce((sum, num) => roundMoney(sum + num), 0);
 
             // Nisab threshold: convert to 元 based on current nisab unit
-            const nisabThreshold = Math.round(nisabToYuan(nisabInputRaw) * 100) / 100;
+            const nisabThreshold = roundMoney(nisabToYuan(nisabInputRaw));
 
             // Precious metal values (in yuan)
-            const goldValue = Math.round((goldWeight * goldPrice) * 100) / 100;
-            const silverValue = Math.round((silverWeight * silverPrice) * 100) / 100;
+            const goldValue = roundMoney(goldWeight * goldPrice);
+            const silverValue = roundMoney(silverWeight * silverPrice);
 
             const totalAssets = safeAdd(cash, goldValue, silverValue, tradeGoods, stocks, realEstate, receivables);
-            const totalDebts = safeAdd(personalDebt, mortgage, carLoan, creditCard, otherDebt);
-            const netWealth = Math.round((totalAssets - totalDebts) * 100) / 100;
+            const totalDebts = safeAdd(personalDebt, mortgage, carLoan, creditCard, otherDebt, annualBasicExpenses);
+            const netWealth = roundMoney(totalAssets - totalDebts);
 
             const isAboveNisab = netWealth >= nisabThreshold;
-            const zakatDue = isAboveNisab ? Math.round((netWealth * 0.025) * 100) / 100 : 0;
+            const zakatDue = isAboveNisab ? roundMoney(netWealth * 0.025) : 0;
 
             // Store result data
             const resultData = {
+                schemaVersion: 3,
+                hawlConfirmed,
                 silverPrice,
                 goldPrice,
                 nisabThreshold,
@@ -511,7 +573,8 @@
                     mortgage,
                     carLoan,
                     creditCard,
-                    otherDebt
+                    otherDebt,
+                    annualBasicExpenses
                 },
                 totalAssets,
                 totalDebts,
@@ -537,6 +600,8 @@
                     input.value = '0';
                 }
             });
+            document.getElementById('hawlConfirmed').checked = false;
+            clearFormAlert();
             document.getElementById('priceStatus').style.display = 'none';
             localStorage.removeItem('zakatDraft');
             // Re-fetch real-time prices after reset
@@ -560,7 +625,11 @@
                 if (e.target.id !== 'silverPrice' && e.target.id !== 'goldPrice' && e.target.id !== 'nisabThreshold') {
                     e.target.value = '0';
                 }
+            } else if (e.target.matches('input[type="number"]')) {
+                const sanitized = sanitizeNumber(e.target.value);
+                e.target.value = sanitized === 0 ? '0' : String(sanitized);
             }
+            if (e.target.matches('input[type="number"]')) saveDraft();
         });
 
         // Auto-fetch prices on load

@@ -83,8 +83,114 @@
     </div>
 
     <script>
+        function roundMoney(n) {
+            return Math.round(n * 100) / 100;
+        }
+
+        function toNumber(v) {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function toNonNegative(v) {
+            return Math.max(0, toNumber(v));
+        }
+
+        function clamp(v, min, max) {
+            return Math.min(Math.max(v, min), max);
+        }
+
         function fmt(n) {
             return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function clearCorruptedResult() {
+            localStorage.removeItem('zakatResult');
+            window.location.href = 'Zakat.html';
+        }
+
+        function normalizeResultData(rawData) {
+            const rawAssets = rawData.assets && typeof rawData.assets === 'object' ? rawData.assets : {};
+            const rawDebts = rawData.debts && typeof rawData.debts === 'object' ? rawData.debts : {};
+
+            const goldPrice = toNonNegative(rawData.goldPrice);
+            const silverPrice = toNonNegative(rawData.silverPrice);
+            const nisabThreshold = toNonNegative(rawData.nisabThreshold);
+
+            const assets = {
+                cash: toNonNegative(rawAssets.cash),
+                goldWeight: toNonNegative(rawAssets.goldWeight),
+                silverWeight: toNonNegative(rawAssets.silverWeight),
+                tradeGoods: toNonNegative(rawAssets.tradeGoods),
+                stocks: toNonNegative(rawAssets.stocks),
+                realEstate: toNonNegative(rawAssets.realEstate),
+                receivables: toNonNegative(rawAssets.receivables)
+            };
+
+            assets.goldValue = roundMoney(assets.goldWeight * goldPrice);
+            assets.silverValue = roundMoney(assets.silverWeight * silverPrice);
+
+            const debts = {
+                personalDebt: toNonNegative(rawDebts.personalDebt),
+                mortgage: toNonNegative(rawDebts.mortgage),
+                carLoan: toNonNegative(rawDebts.carLoan),
+                creditCard: toNonNegative(rawDebts.creditCard),
+                otherDebt: toNonNegative(rawDebts.otherDebt),
+                annualBasicExpenses: toNonNegative(rawDebts.annualBasicExpenses)
+            };
+
+            const totalAssets = roundMoney(
+                assets.cash + assets.goldValue + assets.silverValue + assets.tradeGoods + assets.stocks + assets.realEstate + assets.receivables
+            );
+            const totalDebts = roundMoney(
+                debts.personalDebt + debts.mortgage + debts.carLoan + debts.creditCard + debts.otherDebt + debts.annualBasicExpenses
+            );
+            const netWealth = roundMoney(totalAssets - totalDebts);
+            const isAboveNisab = nisabThreshold > 0 && netWealth >= nisabThreshold;
+            const zakatDue = isAboveNisab ? roundMoney(netWealth * 0.025) : 0;
+
+            return {
+                schemaVersion: toNumber(rawData.schemaVersion) || 1,
+                hawlConfirmed: !!rawData.hawlConfirmed,
+                silverPrice,
+                goldPrice,
+                nisabThreshold,
+                assets,
+                debts,
+                totalAssets,
+                totalDebts,
+                netWealth,
+                isAboveNisab,
+                zakatDue,
+                calculatedAt: rawData.calculatedAt
+            };
+        }
+
+        function formatCalculatedAt(value) {
+            const dt = new Date(value);
+            if (Number.isNaN(dt.getTime())) return '未知';
+            return dt.toLocaleString('zh-CN');
+        }
+
+        function renderNoData(container) {
+            container.innerHTML = `
+                <div class="card no-data-msg">
+                    <h2>暂无计算数据</h2>
+                    <p>请先在计算页面输入您的资产信息并计算天课。</p>
+                    <a href="Zakat.html" class="btn-secondary">前往计算</a>
+                </div>`;
+        }
+
+        function renderCorruptedData(container) {
+            container.innerHTML = `
+                <div class="card no-data-msg">
+                    <h2>结果数据损坏</h2>
+                    <p>检测到本地结果数据异常，请清除后重新计算。</p>
+                    <div class="result-actions" style="border-top:none; padding-top:0;">
+                        <button class="btn-reset" onclick="clearCorruptedResult()">清除损坏数据</button>
+                        <a href="Zakat.html" class="btn-secondary">返回计算页</a>
+                    </div>
+                </div>`;
         }
 
         function render() {
@@ -92,18 +198,27 @@
             const raw = localStorage.getItem('zakatResult');
 
             if (!raw) {
-                container.innerHTML = `
-                    <div class="card no-data-msg">
-                        <h2>暂无计算数据</h2>
-                        <p>请先在计算页面输入您的资产信息并计算天课。</p>
-                        <a href="Zakat.html" class="btn-secondary">前往计算</a>
-                    </div>`;
+                renderNoData(container);
                 return;
             }
 
-            const d = JSON.parse(raw);
-            const pct = d.nisabThreshold > 0 ? Math.min((d.netWealth / d.nisabThreshold) * 100, 100) : 0;
-            const calcTime = new Date(d.calculatedAt).toLocaleString('zh-CN');
+            let parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (err) {
+                renderCorruptedData(container);
+                return;
+            }
+
+            if (!parsed || typeof parsed !== 'object') {
+                renderCorruptedData(container);
+                return;
+            }
+
+            const d = normalizeResultData(parsed);
+            const rawPct = d.nisabThreshold > 0 ? (d.netWealth / d.nisabThreshold) * 100 : 0;
+            const pct = clamp(rawPct, 0, 100);
+            const calcTime = formatCalculatedAt(d.calculatedAt);
 
             container.innerHTML = `
                 <div class="timestamp">计算时间：${calcTime}</div>
@@ -185,8 +300,12 @@
                     </div>
 
                     <div class="detail-section">
-                        <div class="detail-section-title">债务扣除</div>
+                        <div class="detail-section-title">日常开支和债务扣除</div>
 
+                        <div class="detail-row danger">
+                            <span class="label">一年的基本日常开支金额</span>
+                            <span class="value">−${fmt(d.debts.annualBasicExpenses)} 元</span>
+                        </div>
                         <div class="detail-row danger">
                             <span class="label">个人欠款/借款</span>
                             <span class="value">−${fmt(d.debts.personalDebt)} 元</span>
@@ -238,6 +357,10 @@
                         <div class="detail-row">
                             <span class="label">起征点（用户设定）</span>
                             <span class="value">${fmt(d.nisabThreshold)} 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Hawl 前提确认</span>
+                            <span class="value">${d.hawlConfirmed ? '已确认' : '未确认（结果仅供参考）'}</span>
                         </div>
                         ${d.goldPrice > 0 ? `<div class="detail-row">
                             <span class="label">黄金价格</span>
