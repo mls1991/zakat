@@ -1,142 +1,701 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天课计算结果 — 哈乃斐学派</title>
-    <meta name="description" content="您的天课（Zakat）计算结果详情。">
+    <title>天课计算结果 · Zakat Result</title>
+    <meta name="description" content="您的天课计算结果详情">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .fade-in {
+        :root {
+            --lapis: #1a365d;
+            --lapis-light: #2c4a7c;
+            --lapis-dark: #0f1f38;
+            --gold: #d4af37;
+            --gold-light: #e8c94d;
+            --gold-pale: #f5e6b3;
+            --ivory: #faf8f5;
+            --ivory-dark: #f0ebe3;
+            --text: #1a1a2e;
+            --text-light: #4a4a5e;
+            --text-muted: #8a8a9e;
+            --success: #2d5a4a;
+            --danger: #8b3a3a;
+            --shadow: rgba(26, 54, 93, 0.08);
+            --shadow-lg: rgba(26, 54, 93, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Serif SC', serif;
+            background: var(--ivory);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .geometric-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 0% 0%, var(--lapis) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, var(--gold) 0%, transparent 40%);
+        }
+
+        .geometric-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a365d' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            background: linear-gradient(165deg, var(--lapis-dark) 0%, var(--lapis) 50%, var(--lapis-light) 100%);
+            padding: 60px 24px 80px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse 80% 50% at 50% 120%, var(--gold) 0%, transparent 50%);
+            opacity: 0.1;
+        }
+
+        .header-decoration {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 40px;
+            opacity: 0.3;
+        }
+
+        .header-decoration svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 1;
+        }
+
+        .header-icon {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon::before {
+            content: '';
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: inset -10px -5px 0 3px var(--gold);
+            opacity: 0.25;
+        }
+
+        .header-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--gold);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Container */
+        .container {
+            max-width: 720px;
+            margin: -40px auto 60px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Timestamp */
+        .timestamp {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* Cards */
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px var(--shadow), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+            overflow: hidden;
             animation: fadeInUp 0.6s ease both;
         }
 
-        .fade-in:nth-child(2) {
-            animation-delay: 0.1s;
-        }
-
-        .fade-in:nth-child(3) {
-            animation-delay: 0.2s;
-        }
-
-        .fade-in:nth-child(4) {
-            animation-delay: 0.3s;
-        }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .no-data-msg {
+        /* Result Hero */
+        .result-hero {
             text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
+            padding: 48px 32px;
+            background: linear-gradient(135deg, var(--ivory) 0%, #fff 100%);
+            position: relative;
+            overflow: hidden;
         }
 
-        .no-data-msg h2 {
-            font-size: 1.2rem;
-            margin-bottom: 12px;
-            color: var(--text);
+        .result-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--lapis), var(--gold), var(--lapis));
         }
 
-        .no-data-msg p {
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
             margin-bottom: 24px;
         }
 
-        .timestamp {
-            text-align: center;
-            font-size: 0.78rem;
+        .status-badge.reached {
+            background: linear-gradient(135deg, #e8f5f0 0%, #d4ede3 100%);
+            color: var(--success);
+        }
+
+        .status-badge.not-reached {
+            background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
             color: var(--text-muted);
+        }
+
+        .status-badge svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .zakat-amount {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--lapis);
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .zakat-amount.zero {
+            color: var(--text-muted);
+        }
+
+        .zakat-amount .currency {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-left: 8px;
+        }
+
+        .status-text {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Nisab Progress */
+        .nisab-section {
+            padding: 24px 32px;
+            border-top: 1px solid var(--ivory-dark);
+            background: #fff;
+        }
+
+        .nisab-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .nisab-label strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .progress-container {
+            position: relative;
+            height: 10px;
+            background: var(--ivory-dark);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+            background: linear-gradient(90deg, var(--lapis), var(--gold));
+            transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+            min-width: 0;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .nisab-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Detail Sections */
+        .detail-section {
+            padding: 24px 32px;
+            border-top: 1px solid var(--ivory-dark);
+        }
+
+        .detail-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--lapis);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
             margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-section-title svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--lapis);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(240, 235, 227, 0.5);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row .label {
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-row .value {
+            font-weight: 600;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .detail-row.deduction .value {
+            color: var(--danger);
+        }
+
+        .detail-row.subtotal {
+            border-top: 2px solid var(--ivory-dark);
+            margin-top: 8px;
+            padding-top: 14px;
+            font-weight: 600;
+        }
+
+        .detail-row.subtotal .label {
+            color: var(--text);
+        }
+
+        .detail-row.total {
+            border-top: 2px solid var(--lapis);
+            margin-top: 8px;
+            padding-top: 16px;
+            font-weight: 700;
+        }
+
+        .detail-row.total .label,
+        .detail-row.total .value {
+            font-size: 1rem;
+            color: var(--lapis);
+        }
+
+        /* Reference Section */
+        .reference-section {
+            padding: 24px 32px;
+            background: linear-gradient(135deg, var(--ivory) 0%, #fff 100%);
+        }
+
+        .reference-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+        }
+
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .reference-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .reference-item .label {
+            color: var(--text-muted);
+        }
+
+        .reference-item .value {
+            color: var(--text);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Actions */
+        .result-actions {
+            padding: 24px 32px;
+            border-top: 1px solid var(--ivory-dark);
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            background: #fff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--lapis) 0%, var(--lapis-light) 100%);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 16px rgba(26, 54, 93, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 54, 93, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-light);
+            border: 2px solid var(--ivory-dark);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-muted);
+            background: var(--ivory);
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* No Data */
+        .no-data {
+            text-align: center;
+            padding: 60px 32px;
+        }
+
+        .no-data-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--ivory);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .no-data-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--text-muted);
+        }
+
+        .no-data h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.3rem;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .no-data p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-divider {
+            width: 60px;
+            height: 1px;
+            background: var(--gold);
+            margin: 0 auto 20px;
+            opacity: 0.5;
+        }
+
+        .footer-arabic {
+            font-family: 'Amiri', serif;
+            font-size: 1.1rem;
+            color: var(--lapis);
+            margin-bottom: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .header {
+                padding: 40px 20px 60px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                margin-top: -30px;
+                padding: 0 16px;
+            }
+
+            .zakat-amount {
+                font-size: 2.8rem;
+            }
+
+            .result-hero {
+                padding: 36px 24px;
+            }
+
+            .nisab-section,
+            .detail-section,
+            .reference-section,
+            .result-actions {
+                padding: 20px 24px;
+            }
+
+            .reference-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .geometric-bg, .geometric-pattern {
+                display: none;
+            }
+
+            .header {
+                background: var(--lapis) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid var(--ivory-dark);
+                break-inside: avoid;
+            }
+
+            .result-actions {
+                display: none;
+            }
+
+            .progress-bar::after {
+                display: none;
+            }
         }
     </style>
 </head>
-
 <body>
+    <div class="geometric-bg"></div>
+    <div class="geometric-pattern"></div>
 
-    <!-- Header -->
-    <div class="header">
-        <div class="header-icon">
-            <svg viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+    <header class="header">
+        <div class="header-decoration">
+            <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+                <path d="M0,20 Q50,0 100,20 T200,20" />
+                <path d="M0,20 Q50,40 100,20 T200,20" />
             </svg>
         </div>
+        <div class="header-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 3c.5 0 1 .05 1.5.15a6 6 0 0 0 4.35 10.35A6 6 0 1 1 12 3z"/></svg>
+        </div>
         <h1>天课计算结果</h1>
-        <p>基于哈乃斐学派教法 · 天课比例 2.5%</p>
-    </div>
+        <p class="header-subtitle">基于哈乃斐学派教法 · 天课比例 2.5%</p>
+    </header>
 
-    <div class="container" id="resultContainer">
+    <main class="container" id="resultContainer">
         <!-- Content will be dynamically generated -->
-    </div>
+    </main>
+
+    <footer class="footer" id="footer" style="display:none;">
+        <div class="footer-divider"></div>
+        <div class="footer-arabic">الحمد لله</div>
+        <div>基于哈乃斐学派教法 · 天课比例 2.5%</div>
+    </footer>
 
     <script>
-        function roundMoney(n) {
-            return Math.round(n * 100) / 100;
+        const fmt = (n) => n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        function sanitizeNumber(raw) {
+            const n = Number.parseFloat(raw);
+            return Number.isFinite(n) ? Math.max(0, n) : 0;
         }
 
-        function toNumber(v) {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : 0;
+        function roundMoney(num) {
+            return Math.round(num * 100) / 100;
         }
 
-        function toNonNegative(v) {
-            return Math.max(0, toNumber(v));
-        }
-
-        function clamp(v, min, max) {
-            return Math.min(Math.max(v, min), max);
-        }
-
-        function fmt(n) {
-            return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function clearCorruptedResult() {
-            localStorage.removeItem('zakatResult');
-            window.location.href = 'Zakat.html';
+        function clearResult() {
+            localStorage.removeItem('zakatResultV2');
+            window.location.href = 'index.html';
         }
 
         function normalizeResultData(rawData) {
             const rawAssets = rawData.assets && typeof rawData.assets === 'object' ? rawData.assets : {};
             const rawDebts = rawData.debts && typeof rawData.debts === 'object' ? rawData.debts : {};
 
-            const goldPrice = toNonNegative(rawData.goldPrice);
-            const silverPrice = toNonNegative(rawData.silverPrice);
-            const nisabThreshold = toNonNegative(rawData.nisabThreshold);
+            const goldPrice = sanitizeNumber(rawData.goldPrice);
+            const silverPrice = sanitizeNumber(rawData.silverPrice);
+            const nisabThreshold = sanitizeNumber(rawData.nisabThreshold);
 
             const assets = {
-                cash: toNonNegative(rawAssets.cash),
-                goldWeight: toNonNegative(rawAssets.goldWeight),
-                silverWeight: toNonNegative(rawAssets.silverWeight),
-                tradeGoods: toNonNegative(rawAssets.tradeGoods),
-                stocks: toNonNegative(rawAssets.stocks),
-                realEstate: toNonNegative(rawAssets.realEstate),
-                receivables: toNonNegative(rawAssets.receivables)
+                cash: sanitizeNumber(rawAssets.cash),
+                goldWeight: sanitizeNumber(rawAssets.goldWeight),
+                silverWeight: sanitizeNumber(rawAssets.silverWeight),
+                tradeGoods: sanitizeNumber(rawAssets.tradeGoods),
+                stocks: sanitizeNumber(rawAssets.stocks),
+                realEstate: sanitizeNumber(rawAssets.realEstate),
+                receivables: sanitizeNumber(rawAssets.receivables)
             };
 
             assets.goldValue = roundMoney(assets.goldWeight * goldPrice);
             assets.silverValue = roundMoney(assets.silverWeight * silverPrice);
 
             const debts = {
-                personalDebt: toNonNegative(rawDebts.personalDebt),
-                mortgage: toNonNegative(rawDebts.mortgage),
-                carLoan: toNonNegative(rawDebts.carLoan),
-                creditCard: toNonNegative(rawDebts.creditCard),
-                otherDebt: toNonNegative(rawDebts.otherDebt),
-                annualBasicExpenses: toNonNegative(rawDebts.annualBasicExpenses)
+                personalDebt: sanitizeNumber(rawDebts.personalDebt),
+                mortgage: sanitizeNumber(rawDebts.mortgage),
+                carLoan: sanitizeNumber(rawDebts.carLoan),
+                creditCard: sanitizeNumber(rawDebts.creditCard),
+                otherDebt: sanitizeNumber(rawDebts.otherDebt),
+                annualBasicExpenses: sanitizeNumber(rawDebts.annualBasicExpenses)
             };
 
             const totalAssets = roundMoney(
@@ -150,7 +709,6 @@
             const zakatDue = isAboveNisab ? roundMoney(netWealth * 0.025) : 0;
 
             return {
-                schemaVersion: toNumber(rawData.schemaVersion) || 1,
                 hawlConfirmed: !!rawData.hawlConfirmed,
                 silverPrice,
                 goldPrice,
@@ -174,28 +732,38 @@
 
         function renderNoData(container) {
             container.innerHTML = `
-                <div class="card no-data-msg">
+                <div class="card no-data">
+                    <div class="no-data-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
                     <h2>暂无计算数据</h2>
                     <p>请先在计算页面输入您的资产信息并计算天课。</p>
-                    <a href="Zakat.html" class="btn-secondary">前往计算</a>
-                </div>`;
+                    <a href="index.html" class="btn btn-primary">前往计算</a>
+                </div>
+            `;
+            document.getElementById('footer').style.display = 'block';
         }
 
         function renderCorruptedData(container) {
             container.innerHTML = `
-                <div class="card no-data-msg">
+                <div class="card no-data">
+                    <div class="no-data-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
                     <h2>结果数据损坏</h2>
                     <p>检测到本地结果数据异常，请清除后重新计算。</p>
-                    <div class="result-actions" style="border-top:none; padding-top:0;">
-                        <button class="btn-reset" onclick="clearCorruptedResult()">清除损坏数据</button>
-                        <a href="Zakat.html" class="btn-secondary">返回计算页</a>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button class="btn btn-secondary" onclick="clearResult()">清除数据</button>
+                        <a href="index.html" class="btn btn-primary">返回计算页</a>
                     </div>
-                </div>`;
+                </div>
+            `;
+            document.getElementById('footer').style.display = 'block';
         }
 
         function render() {
             const container = document.getElementById('resultContainer');
-            const raw = localStorage.getItem('zakatResult');
+            const raw = localStorage.getItem('zakatResultV2');
 
             if (!raw) {
                 renderNoData(container);
@@ -217,64 +785,67 @@
 
             const d = normalizeResultData(parsed);
             const rawPct = d.nisabThreshold > 0 ? (d.netWealth / d.nisabThreshold) * 100 : 0;
-            const pct = clamp(rawPct, 0, 100);
+            const pct = Math.min(Math.max(rawPct, 0), 100);
             const calcTime = formatCalculatedAt(d.calculatedAt);
 
             container.innerHTML = `
                 <div class="timestamp">计算时间：${calcTime}</div>
 
                 <!-- 主结果卡片 -->
-                <div class="card fade-in" style="overflow:hidden; padding:0;">
+                <div class="card">
                     <div class="result-hero">
-                        <div class="status-icon ${d.isAboveNisab ? 'reached' : 'not-reached'}">
+                        <div class="status-badge ${d.isAboveNisab ? 'reached' : 'not-reached'}">
                             ${d.isAboveNisab
-                    ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
-                    : '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-6h-2v6zm0-8h2V7h-2v2z"/></svg>'
-                }
+                                ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> 已达到起征点'
+                                : '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-6h-2v6zm0-8h2V7h-2v2z"/></svg> 未达到起征点'
+                            }
                         </div>
-                        <div class="zakat-amount ${d.isAboveNisab ? '' : 'zero'}">${fmt(d.zakatDue)}<span class="currency">元</span></div>
+                        <div class="zakat-amount ${d.isAboveNisab ? '' : 'zero'}">
+                            ${fmt(d.zakatDue)}<span class="currency">元</span>
+                        </div>
                         <div class="status-text">${d.isAboveNisab ? '您的净资产已达到起征点，需缴纳天课' : '您的净资产未达到起征点，无需缴纳天课'}</div>
                     </div>
 
-                    <!-- 起征点进度 -->
                     <div class="nisab-section">
                         <div class="nisab-label">
                             <span>起征点进度</span>
-                            <strong>${Math.round(pct)}%</strong>
+                            <strong>${Math.round(rawPct)}%</strong>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
                         </div>
-                        <div class="nisab-label" style="margin-top:6px;">
-                            <span>Nisab: ${fmt(d.nisabThreshold)} 元</span>
+                        <div class="nisab-values">
+                            <span>起征点: ${fmt(d.nisabThreshold)} 元</span>
                             <span>净资产: ${fmt(d.netWealth)} 元</span>
                         </div>
                     </div>
 
-                    <!-- 操作 -->
                     <div class="result-actions">
-                        <a href="Zakat.html" class="btn-secondary">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                        <a href="index.html" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                             返回重新计算
                         </a>
                     </div>
                 </div>
 
                 <!-- 资产明细卡片 -->
-                <div class="card fade-in" style="overflow:hidden; padding:0;">
+                <div class="card">
                     <div class="detail-section">
-                        <div class="detail-section-title">资产明细</div>
+                        <div class="detail-section-title">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                            资产明细
+                        </div>
 
                         <div class="detail-row">
                             <span class="label">现金及银行存款</span>
                             <span class="value">${fmt(d.assets.cash)} 元</span>
                         </div>
                         <div class="detail-row">
-                            <span class="label">黄金 (${d.assets.goldWeight}克 × ${d.goldPrice}元)</span>
+                            <span class="label">黄金 (${d.assets.goldWeight}克 × ${d.goldPrice.toFixed(2)}元)</span>
                             <span class="value">${fmt(d.assets.goldValue)} 元</span>
                         </div>
                         <div class="detail-row">
-                            <span class="label">白银 (${d.assets.silverWeight}克 × ${d.silverPrice}元)</span>
+                            <span class="label">白银 (${d.assets.silverWeight}克 × ${d.silverPrice.toFixed(2)}元)</span>
                             <span class="value">${fmt(d.assets.silverValue)} 元</span>
                         </div>
                         <div class="detail-row">
@@ -300,29 +871,32 @@
                     </div>
 
                     <div class="detail-section">
-                        <div class="detail-section-title">日常开支和债务扣除</div>
+                        <div class="detail-section-title">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h2V7h-2v6z"/></svg>
+                            债务扣除
+                        </div>
 
-                        <div class="detail-row danger">
-                            <span class="label">一年的基本日常开支金额</span>
+                        <div class="detail-row deduction">
+                            <span class="label">一年基本日常开支</span>
                             <span class="value">−${fmt(d.debts.annualBasicExpenses)} 元</span>
                         </div>
-                        <div class="detail-row danger">
+                        <div class="detail-row deduction">
                             <span class="label">个人欠款/借款</span>
                             <span class="value">−${fmt(d.debts.personalDebt)} 元</span>
                         </div>
-                        <div class="detail-row danger">
+                        <div class="detail-row deduction">
                             <span class="label">房贷（当年应还）</span>
                             <span class="value">−${fmt(d.debts.mortgage)} 元</span>
                         </div>
-                        <div class="detail-row danger">
+                        <div class="detail-row deduction">
                             <span class="label">车贷/消费贷（当年应还）</span>
                             <span class="value">−${fmt(d.debts.carLoan)} 元</span>
                         </div>
-                        <div class="detail-row danger">
+                        <div class="detail-row deduction">
                             <span class="label">信用卡待还余额</span>
                             <span class="value">−${fmt(d.debts.creditCard)} 元</span>
                         </div>
-                        <div class="detail-row danger">
+                        <div class="detail-row deduction">
                             <span class="label">其他短期欠款</span>
                             <span class="value">−${fmt(d.debts.otherDebt)} 元</span>
                         </div>
@@ -340,7 +914,7 @@
                         ${d.isAboveNisab ? `
                         <div class="detail-row" style="margin-top: 8px;">
                             <span class="label">× 天课比例</span>
-                            <span class="value" style="color: var(--primary);">2.5%</span>
+                            <span class="value" style="color: var(--lapis);">2.5%</span>
                         </div>
                         <div class="detail-row total">
                             <span class="label">应缴天课</span>
@@ -351,42 +925,45 @@
                 </div>
 
                 <!-- 参考信息 -->
-                <div class="card fade-in" style="overflow:hidden; padding:0;">
-                    <div class="detail-section">
-                        <div class="detail-section-title">参考信息</div>
-                        <div class="detail-row">
-                            <span class="label">起征点（用户设定）</span>
-                            <span class="value">${fmt(d.nisabThreshold)} 元</span>
+                <div class="card">
+                    <div class="reference-section">
+                        <div class="reference-title">参考信息</div>
+                        <div class="reference-grid">
+                            <div class="reference-item">
+                                <span class="label">起征点（用户设定）</span>
+                                <span class="value">${fmt(d.nisabThreshold)} 元</span>
+                            </div>
+                            <div class="reference-item">
+                                <span class="label">Hawl 前提确认</span>
+                                <span class="value">${d.hawlConfirmed ? '已确认' : '未确认'}</span>
+                            </div>
+                            ${d.goldPrice > 0 ? `
+                            <div class="reference-item">
+                                <span class="label">黄金价格</span>
+                                <span class="value">${d.goldPrice.toFixed(2)} 元/克</span>
+                            </div>
+                            ` : ''}
+                            ${d.silverPrice > 0 ? `
+                            <div class="reference-item">
+                                <span class="label">白银价格</span>
+                                <span class="value">${d.silverPrice.toFixed(2)} 元/克</span>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Hawl 前提确认</span>
-                            <span class="value">${d.hawlConfirmed ? '已确认' : '未确认（结果仅供参考）'}</span>
-                        </div>
-                        ${d.goldPrice > 0 ? `<div class="detail-row">
-                            <span class="label">黄金价格</span>
-                            <span class="value">${d.goldPrice.toFixed(2)} 元/克</span>
-                        </div>` : ''}
-                        ${d.silverPrice > 0 ? `<div class="detail-row">
-                            <span class="label">白银价格</span>
-                            <span class="value">${d.silverPrice.toFixed(2)} 元/克</span>
-                        </div>` : ''}
                     </div>
-                </div>
-
-                <div class="footer">
-                    基于哈乃斐学派教法 · 天课比例 2.5%
                 </div>
             `;
 
+            document.getElementById('footer').style.display = 'block';
+
             // Animate progress bar
             setTimeout(() => {
-                document.getElementById('progressFill').style.width = pct + '%';
+                const bar = document.getElementById('progressBar');
+                if (bar) bar.style.width = pct + '%';
             }, 300);
         }
 
         render();
     </script>
-
 </body>
-
 </html>
