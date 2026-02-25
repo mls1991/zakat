@@ -6,8 +6,13 @@
 # Editor directories and files
 .vscode/
 .idea/
+.claude/
+
 *.swp
 *.swo
 
 # Logs
 *.log
+
+# Project specific
+zakat-V1/
