@@ -22,9 +22,16 @@
 ## 文件结构
 
 ```
-zakat-v2/
+Zakat/
 ├── index.html      # 主计算页面
 ├── result.html     # 结果展示页面
+├── style.css       # 全局样式
+├── favicon.svg     # 浏览器标签页图标
+├── js/
+│   ├── utils.js    # 公共工具函数
+│   ├── app.js      # 计算页面逻辑
+│   └── result.js   # 结果页面逻辑
+├── CNAME           # GitHub Pages 自定义域名 (zakat.bhwdwl.store)
 └── README.md       # 说明文档
 ```
 

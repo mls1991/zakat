@@ -9,7 +9,7 @@
     --ivory-dark: #f0ebe3;
     --text: #1a1a2e;
     --text-light: #4a4a5e;
-    --text-muted: #8a8a9e;
+    --text-muted: #6b6b7e;
     --success: #2d5a4a;
     --danger: #8b3a3a;
     --shadow: rgba(26, 54, 93, 0.08);
@@ -487,6 +487,24 @@ input[type="number"]::placeholder {
     padding-left: 4px;
 }
 
+.auto-calc-btn {
+    display: inline;
+    border: 0;
+    background: transparent;
+    color: var(--lapis);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 2px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.auto-calc-btn:focus-visible {
+    outline: 2px solid var(--lapis);
+    outline-offset: 2px;
+}
+
 /* Section Labels */
 .section-label {
     display: flex;
@@ -821,6 +839,17 @@ input[type="number"]::placeholder {
     margin-top: 12px;
     font-size: 0.8rem;
     color: var(--text-muted);
+}
+
+.nisab-values .net-wealth-negative,
+.detail-row.total .value.net-wealth-negative {
+    color: var(--danger);
+}
+
+.net-wealth-negative.net-wealth-note {
+    color: var(--danger);
+    margin-top: 8px;
+    font-size: 0.85rem;
 }
 
 /* Detail Sections */
