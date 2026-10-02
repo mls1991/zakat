@@ -31,7 +31,7 @@ Zakat/
 │   ├── utils.js    # 公共工具函数
 │   ├── app.js      # 计算页面逻辑
 │   └── result.js   # 结果页面逻辑
-├── CNAME           # GitHub Pages 自定义域名 (zakat.bhwdwl.store)
+├── CNAME           # GitHub Pages 自定义域名 (zakat.ayudanci.com)
 └── README.md       # 说明文档
 ```
 
