@@ -9,12 +9,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400&family=Noto+Serif+SC:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="result-page">
     <div class="geometric-bg"></div>
     <div class="geometric-pattern"></div>
 
@@ -40,10 +40,11 @@
 
     <footer class="footer" id="footer" style="display:none;">
         <div class="footer-divider"></div>
-        <div class="footer-arabic">الحمد لله</div>
+        <div class="footer-arabic" lang="ar" dir="rtl">الحمد لله</div>
         <div>基于哈乃斐学派教法 · 天课比例 2.5%</div>
     </footer>
 
+    <script src="calculator.js"></script>
     <script>
         const fmt = (n) => n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -62,57 +63,12 @@
         }
 
         function normalizeResultData(rawData) {
-            const rawAssets = rawData.assets && typeof rawData.assets === 'object' ? rawData.assets : {};
-            const rawDebts = rawData.debts && typeof rawData.debts === 'object' ? rawData.debts : {};
-
-            const goldPrice = sanitizeNumber(rawData.goldPrice);
-            const silverPrice = sanitizeNumber(rawData.silverPrice);
-            const nisabThreshold = sanitizeNumber(rawData.nisabThreshold);
-
-            const assets = {
-                cash: sanitizeNumber(rawAssets.cash),
-                goldWeight: sanitizeNumber(rawAssets.goldWeight),
-                silverWeight: sanitizeNumber(rawAssets.silverWeight),
-                tradeGoods: sanitizeNumber(rawAssets.tradeGoods),
-                stocks: sanitizeNumber(rawAssets.stocks),
-                realEstate: sanitizeNumber(rawAssets.realEstate),
-                receivables: sanitizeNumber(rawAssets.receivables)
-            };
-
-            assets.goldValue = roundMoney(assets.goldWeight * goldPrice);
-            assets.silverValue = roundMoney(assets.silverWeight * silverPrice);
-
-            const debts = {
-                personalDebt: sanitizeNumber(rawDebts.personalDebt),
-                mortgage: sanitizeNumber(rawDebts.mortgage),
-                carLoan: sanitizeNumber(rawDebts.carLoan),
-                creditCard: sanitizeNumber(rawDebts.creditCard),
-                otherDebt: sanitizeNumber(rawDebts.otherDebt),
-                annualBasicExpenses: sanitizeNumber(rawDebts.annualBasicExpenses)
-            };
-
-            const totalAssets = roundMoney(
-                assets.cash + assets.goldValue + assets.silverValue + assets.tradeGoods + assets.stocks + assets.realEstate + assets.receivables
-            );
-            const totalDebts = roundMoney(
-                debts.personalDebt + debts.mortgage + debts.carLoan + debts.creditCard + debts.otherDebt + debts.annualBasicExpenses
-            );
-            const netWealth = roundMoney(totalAssets - totalDebts);
-            const isAboveNisab = nisabThreshold > 0 && netWealth >= nisabThreshold;
-            const zakatDue = isAboveNisab ? roundMoney(netWealth * 0.025) : 0;
-
             return {
-                hawlConfirmed: !!rawData.hawlConfirmed,
-                silverPrice,
-                goldPrice,
-                nisabThreshold,
-                assets,
-                debts,
-                totalAssets,
-                totalDebts,
-                netWealth,
-                isAboveNisab,
-                zakatDue,
+                ...ZakatCalculator.calculate({
+                    ...(rawData.assets || {}), ...(rawData.debts || {}),
+                    goldPrice: rawData.goldPrice, silverPrice: rawData.silverPrice,
+                    nisabThreshold: rawData.nisabThreshold
+                }, rawData.hawlConfirmed === true),
                 calculatedAt: rawData.calculatedAt
             };
         }
@@ -171,7 +127,7 @@
                 return;
             }
 
-            if (!parsed || typeof parsed !== 'object') {
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.hawlConfirmed !== true || sanitizeNumber(parsed.nisabThreshold) <= 0) {
                 renderCorruptedData(container);
                 return;
             }
@@ -199,13 +155,23 @@
                         <div class="status-text">${d.isAboveNisab ? '您的净资产已达到起征点，需缴纳天课' : '您的净资产未达到起征点，无需缴纳天课'}</div>
                     </div>
 
+                    <div class="calculation-breakdown">
+                        <dl>
+                            <div><dt>应课资产合计</dt><dd>${fmt(d.totalAssets)} 元</dd></div>
+                            <div><dt>减去可扣除项</dt><dd>−${fmt(d.totalDebts)} 元</dd></div>
+                            <div class="calculation-net"><dt>净资产</dt><dd>${fmt(d.netWealth)} 元</dd></div>
+                        </dl>
+                        <p class="formula-note">${d.isAboveNisab
+                            ? `${fmt(d.netWealth)} 元 × 2.5% = ${fmt(d.zakatDue)} 元`
+                            : '净资产低于您设定的起征点，本次计算的天课为 0 元。'}</p>
+                    </div>
                     <div class="nisab-section">
                         <div class="nisab-label">
-                            <span>起征点进度</span>
-                            <strong>${Math.round(rawPct)}%</strong>
+                            <span>${d.isAboveNisab ? '已达到起征点' : '距离起征点'}</span>
+                            <strong>${d.isAboveNisab ? '超出 ' : '还差 '}${fmt(Math.abs(d.netWealth - d.nisabThreshold))} 元</strong>
                         </div>
                         <div class="progress-container">
-                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                            <div class="progress-bar" id="progressBar" style="width: ${pct}%"></div>
                         </div>
                         <div class="nisab-values">
                             <span>起征点: ${fmt(d.nisabThreshold)} 元</span>
@@ -216,8 +182,9 @@
                     <div class="result-actions">
                         <a href="./index.html" class="btn btn-primary">
                             <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                            返回重新计算
+                            修改填写
                         </a>
+                        <button type="button" class="btn btn-secondary" onclick="window.print()">打印 / 保存 PDF</button>
                     </div>
                 </div>
 
@@ -349,11 +316,6 @@
 
             document.getElementById('footer').style.display = 'block';
 
-            // Animate progress bar
-            setTimeout(() => {
-                const bar = document.getElementById('progressBar');
-                if (bar) bar.style.width = pct + '%';
-            }, 300);
         }
 
         render();
