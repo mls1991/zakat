@@ -338,13 +338,9 @@ async function fetchPrices() {
 
 **总预估**: 约 1.5 小时
 
-**阶段二原版验收（合并前已通过）**：`node --test tests/phase2.test.cjs`（4 项：起征点与草稿单位换算、Enter 焦点行为、获取价格冷却与自动/手动重试、负净资产展示）；`node --check js/app.js`、`node --check js/result.js`、`git diff --check`。
+**阶段二验收（已通过）**：`node --test tests/phase2.test.cjs`（4 项：起征点与草稿单位换算、Enter 焦点行为、获取价格冷却与自动/手动重试、负净资产展示）；`node --check js/app.js`、`node --check js/result.js`、`git diff --check`。
 
-**阶段三原版验收（合并前已通过）**：两个页面均引用 favicon 和五项 OG 信息；16 个数字输入框均带 `inputmode="decimal"`，16 个普通标签均关联对应输入框，复选框保留包裹式标签；6 个单位按钮含名称与状态并在切换时同步；静态和动态的 21 个装饰 SVG 均设置 `aria-hidden`；`--text-muted` 与 `--ivory` 的实算对比度为 4.92:1。第二阶段 4 项测试、JS 语法和 `git diff --check` 均通过。
-
-### 与 GitHub main 合并说明
-
-远端 main 已先行更新表单布局、共享计算模块、旧草稿迁移、结果展示和独立测试。合并以远端页面与 `app.js` / `calculator.js` 为基础，保留其新流程；本方案的自动白银参考值、标签关联、手机数字键盘、单位状态及本地存储错误处理已由远端实现。额外合入价格获取的冷却与一次重试、负净资产提示、favicon 与分享元信息。远端已采用 `zakat.ayudanci.com`，分享链接与其 CNAME 一致。旧版 `js/` 与 `tests/phase2.test.cjs` 已由现行实现替代；以上阶段一至三的文件路径与验收数字属于合并前的记录。
+**阶段三验收（已通过）**：两个页面均引用 favicon 和五项 OG 信息；16 个数字输入框均带 `inputmode="decimal"`，16 个普通标签均关联对应输入框，复选框保留包裹式标签；6 个单位按钮含名称与状态并在切换时同步；静态和动态的 21 个装饰 SVG 均设置 `aria-hidden`；`--text-muted` 与 `--ivory` 的实算对比度为 4.92:1。第二阶段 4 项测试、JS 语法和 `git diff --check` 均通过。
 
 ---
 
